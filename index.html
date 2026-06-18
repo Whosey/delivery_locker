@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GuardBox 外卖防盗</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">GuardBox</p>
+          <h1>外卖防盗控制台</h1>
+        </div>
+        <button class="icon-button" id="refreshBtn" type="button" title="刷新状态" aria-label="刷新状态">↻</button>
+      </header>
+
+      <section class="device-strip" aria-label="设备连接状态">
+        <div class="device-led" id="connectionLed"></div>
+        <div>
+          <strong id="deviceName">演示设备 GuardBox-001</strong>
+          <span id="connectionText">演示模式运行中</span>
+        </div>
+        <button class="plain-button" id="connectSerialBtn" type="button">连接串口</button>
+      </section>
+
+      <section class="status-panel" id="statusPanel" aria-label="当前防盗状态">
+        <div class="status-copy">
+          <span id="stateLabel">空闲</span>
+          <strong id="stateHeadline">可以放置外卖后开始防盗</strong>
+          <p id="stateHint">演示模式已内置重量变化，可用于答辩展示完整闭环。</p>
+        </div>
+        <div class="weight-dial">
+          <span id="currentWeight">650.25</span>
+          <small>g</small>
+        </div>
+      </section>
+
+      <section class="metric-grid" aria-label="重量指标">
+        <article>
+          <span>基准重量</span>
+          <strong><span id="originalWeight">0.00</span> g</strong>
+        </article>
+        <article>
+          <span>下降重量</span>
+          <strong><span id="dropWeight">0.00</span> g</strong>
+        </article>
+        <article>
+          <span>掉重阈值</span>
+          <strong><span id="dropThreshold">300</span> g</strong>
+        </article>
+        <article>
+          <span>蜂鸣器</span>
+          <strong id="alarmState">关闭</strong>
+        </article>
+      </section>
+
+      <nav class="tabbar" aria-label="页面切换">
+        <button class="tab active" type="button" data-view="dashboard">首页</button>
+        <button class="tab" type="button" data-view="calibration">校准</button>
+        <button class="tab" type="button" data-view="records">记录</button>
+        <button class="tab" type="button" data-view="settings">设置</button>
+      </nav>
+
+      <section class="view active" id="dashboardView">
+        <div class="action-grid">
+          <button class="primary-action" id="startGuardBtn" type="button">
+            <span>开始防盗</span>
+            <small>发送 guard_start</small>
+          </button>
+          <button class="secondary-action" id="stopGuardBtn" type="button">
+            <span>停止监测</span>
+            <small>发送 guard_stop</small>
+          </button>
+          <button class="danger-action" id="alarmOffBtn" type="button">
+            <span>关闭报警</span>
+            <small>发送 alarm_off</small>
+          </button>
+          <button class="secondary-action" data-jump="calibration" type="button">
+            <span>称重校准</span>
+            <small>去皮与砝码校准</small>
+          </button>
+        </div>
+
+        <section class="camera-panel">
+          <div>
+            <span class="section-kicker">证据预览</span>
+            <h2>最近一次报警画面</h2>
+          </div>
+          <div class="camera-frame" id="cameraFrame">
+            <img id="cameraImage" alt="ESP32 摄像头画面">
+            <div class="plate">
+              <span class="box-lid"></span>
+              <span class="box-body"></span>
+            </div>
+            <p id="cameraCaption">摄像头未接入，报警时将生成本地模拟证据。</p>
+          </div>
+        </section>
+
+        <section class="log-panel">
+          <div class="section-title">
+            <h2>设备日志</h2>
+            <button class="plain-button" id="clearLogBtn" type="button">清空</button>
+          </div>
+          <div class="log-box" id="logBox" aria-live="polite"></div>
+        </section>
+      </section>
+
+      <section class="view" id="calibrationView">
+        <section class="step-card">
+          <span class="step-index">1</span>
+          <div>
+            <h2>空载去皮</h2>
+            <p>拿走底盘上所有物品后点击去皮。硬件端执行 hx711_tare，返回 offset。</p>
+            <button class="secondary-action compact" id="tareBtn" type="button">开始去皮</button>
+          </div>
+        </section>
+        <section class="step-card">
+          <span class="step-index">2</span>
+          <div>
+            <h2>已知重量校准</h2>
+            <p>放上砝码或已知重量物体，输入克数后执行 hx711_cal。</p>
+            <label class="field-label" for="knownWeightInput">已知重量 g</label>
+            <div class="inline-form">
+              <input id="knownWeightInput" type="number" min="1" step="1" value="500">
+              <button class="primary-action compact" id="calibrateBtn" type="button">执行校准</button>
+            </div>
+          </div>
+        </section>
+        <section class="diagnostic-card">
+          <h2>诊断数据</h2>
+          <dl>
+            <div><dt>校准状态</dt><dd id="calibratedText">已校准</dd></div>
+            <div><dt>offset</dt><dd id="offsetText">128436</dd></div>
+            <div><dt>scale</dt><dd id="scaleText">213.540 raw/g</dd></div>
+            <div><dt>raw</dt><dd id="rawText">269378</dd></div>
+          </dl>
+          <button class="secondary-action compact" id="readRawBtn" type="button">读取 raw</button>
+        </section>
+      </section>
+
+      <section class="view" id="recordsView">
+        <div class="section-title">
+          <div>
+            <span class="section-kicker">AlarmEvent</span>
+            <h2>报警记录</h2>
+          </div>
+          <button class="plain-button" id="seedAlarmBtn" type="button">模拟报警</button>
+        </div>
+        <div class="record-list" id="recordList"></div>
+      </section>
+
+      <section class="view" id="settingsView">
+        <section class="settings-card">
+          <h2>掉重阈值</h2>
+          <p>当前固件默认 300g，可通过 set_drop 命令修改。</p>
+          <div class="segmented" id="thresholdOptions">
+            <button type="button" data-threshold="100">100g</button>
+            <button type="button" data-threshold="200">200g</button>
+            <button type="button" data-threshold="300" class="active">300g</button>
+            <button type="button" data-threshold="500">500g</button>
+          </div>
+          <label class="field-label" for="customThresholdInput">自定义阈值 g</label>
+          <div class="inline-form">
+            <input id="customThresholdInput" type="number" min="50" step="10" value="300">
+            <button class="primary-action compact" id="setThresholdBtn" type="button">保存阈值</button>
+          </div>
+        </section>
+        <section class="settings-card">
+          <h2>ESP32 摄像头</h2>
+          <p>摄像头和称重开发板分开时，App 分别连接 RT-Thread 串口和 ESP32 HTTP 摄像头。</p>
+          <label class="field-label" for="cameraUrlInput">抓拍地址</label>
+          <div class="inline-form">
+            <input id="cameraUrlInput" type="url" value="http://192.168.4.1/capture">
+            <button class="secondary-action compact" id="testCameraBtn" type="button">测试画面</button>
+          </div>
+        </section>
+        <section class="settings-card">
+          <h2>演示模式</h2>
+          <p>没有蓝牙/串口设备时，使用本地状态机模拟 HX711 重量变化和报警恢复。</p>
+          <label class="switch-row">
+            <span>启用演示模式</span>
+            <input id="demoModeToggle" type="checkbox" checked>
+          </label>
+        </section>
+      </section>
+    </main>
+
+    <div class="alarm-sheet" id="alarmSheet" aria-live="assertive" aria-hidden="true">
+      <div class="alarm-card">
+        <span class="alarm-badge">ALARM</span>
+        <h2>疑似外卖被拿走</h2>
+        <p id="alarmMessage">重量下降超过阈值，蜂鸣器已启动。</p>
+        <div class="alarm-actions">
+          <button class="danger-action compact" id="sheetAlarmOffBtn" type="button">关闭蜂鸣器</button>
+          <button class="secondary-action compact" data-jump="records" type="button">查看记录</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

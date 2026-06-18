@@ -1,0 +1,673 @@
+:root {
+  color-scheme: light;
+  --bg: #f4f7f6;
+  --panel: #ffffff;
+  --ink: #16211f;
+  --muted: #66736f;
+  --line: #dce5e1;
+  --green: #138a63;
+  --green-soft: #dff3ea;
+  --amber: #b66a00;
+  --amber-soft: #fff1d7;
+  --red: #c83d35;
+  --red-soft: #ffe3df;
+  --blue: #2f68b0;
+  --blue-soft: #e4eefb;
+  --shadow: 0 18px 45px rgba(22, 33, 31, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+  background:
+    linear-gradient(180deg, #e9f0ed 0, var(--bg) 260px),
+    var(--bg);
+  color: var(--ink);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.52;
+}
+
+.app-shell {
+  width: min(100%, 520px);
+  margin: 0 auto;
+  padding: 22px 16px 32px;
+}
+
+.topbar,
+.device-strip,
+.section-title,
+.alarm-actions,
+.inline-form,
+.switch-row {
+  display: flex;
+  align-items: center;
+}
+
+.topbar {
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.eyebrow,
+.section-kicker {
+  margin: 0 0 4px;
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 26px;
+  line-height: 1.18;
+}
+
+h2 {
+  font-size: 17px;
+  line-height: 1.25;
+}
+
+.icon-button {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: var(--shadow);
+  font-size: 22px;
+}
+
+.device-strip {
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.device-strip > div:nth-child(2) {
+  min-width: 0;
+  flex: 1;
+}
+
+.device-strip strong,
+.device-strip span {
+  display: block;
+}
+
+.device-strip span {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.device-led {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 6px var(--green-soft);
+  flex: 0 0 auto;
+}
+
+.device-led.offline {
+  background: var(--red);
+  box-shadow: 0 0 0 6px var(--red-soft);
+}
+
+.plain-button {
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #eef4f1;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-panel {
+  margin-top: 16px;
+  padding: 18px;
+  border-radius: 8px;
+  background: var(--blue-soft);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+  align-items: center;
+  border: 1px solid rgba(47, 104, 176, 0.2);
+}
+
+.status-panel.monitoring {
+  background: var(--green-soft);
+  border-color: rgba(19, 138, 99, 0.22);
+}
+
+.status-panel.alarm {
+  background: var(--red-soft);
+  border-color: rgba(200, 61, 53, 0.28);
+}
+
+.status-copy span {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.status-copy strong {
+  display: block;
+  font-size: 20px;
+  line-height: 1.22;
+}
+
+.status-copy p {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.weight-dial {
+  width: 112px;
+  height: 112px;
+  border-radius: 50%;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  background: var(--panel);
+  box-shadow: inset 0 0 0 9px rgba(47, 104, 176, 0.13);
+}
+
+.weight-dial span {
+  display: block;
+  max-width: 92px;
+  overflow: hidden;
+  font-size: 24px;
+  font-weight: 850;
+  line-height: 1;
+  text-overflow: ellipsis;
+}
+
+.weight-dial small {
+  margin-top: 4px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.metric-grid {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.metric-grid article,
+.camera-panel,
+.log-panel,
+.step-card,
+.diagnostic-card,
+.settings-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.metric-grid article {
+  padding: 12px;
+  min-height: 76px;
+}
+
+.metric-grid strong {
+  display: block;
+}
+
+.metric-grid article > span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.metric-grid strong {
+  margin-top: 8px;
+  font-size: 18px;
+}
+
+.tabbar {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  margin: 16px -2px 12px;
+  padding: 4px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+}
+
+.tab {
+  min-height: 38px;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.tab.active {
+  background: var(--ink);
+  color: white;
+}
+
+.view {
+  display: none;
+}
+
+.view.active {
+  display: block;
+}
+
+.action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.primary-action,
+.secondary-action,
+.danger-action {
+  min-height: 74px;
+  padding: 13px;
+  border-radius: 8px;
+  text-align: left;
+  color: white;
+  font-weight: 850;
+}
+
+.primary-action {
+  background: var(--green);
+}
+
+.secondary-action {
+  background: #34413d;
+}
+
+.danger-action {
+  background: var(--red);
+}
+
+.primary-action span,
+.secondary-action span,
+.danger-action span,
+.primary-action small,
+.secondary-action small,
+.danger-action small {
+  display: block;
+}
+
+.primary-action small,
+.secondary-action small,
+.danger-action small {
+  margin-top: 6px;
+  opacity: 0.82;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.compact {
+  min-height: 42px;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.camera-panel,
+.log-panel,
+.diagnostic-card,
+.settings-card {
+  margin-top: 12px;
+  padding: 14px;
+}
+
+.camera-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.camera-frame {
+  min-height: 156px;
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(47, 104, 176, 0.18), rgba(19, 138, 99, 0.15)),
+    #edf3f1;
+  display: grid;
+  place-items: center;
+  padding: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.camera-frame.alarm {
+  background:
+    linear-gradient(135deg, rgba(200, 61, 53, 0.2), rgba(182, 106, 0, 0.2)),
+    #fff0ea;
+}
+
+.camera-frame img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  object-fit: cover;
+}
+
+.camera-frame.has-image img {
+  display: block;
+}
+
+.camera-frame.has-image .plate {
+  display: none;
+}
+
+.camera-frame.has-image p {
+  color: white;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.65);
+}
+
+.plate {
+  width: 148px;
+  height: 96px;
+  position: relative;
+  border-radius: 8px;
+  background: #d6e0dd;
+  box-shadow: 0 15px 28px rgba(22, 33, 31, 0.16);
+}
+
+.box-body,
+.box-lid {
+  position: absolute;
+  left: 28px;
+  right: 28px;
+  display: block;
+  background: #f5b84b;
+}
+
+.box-body {
+  bottom: 22px;
+  height: 38px;
+  border-radius: 3px 3px 6px 6px;
+}
+
+.box-lid {
+  bottom: 60px;
+  height: 14px;
+  transform: skewX(-16deg);
+  border-radius: 4px;
+  background: #e88f35;
+}
+
+.camera-frame p {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.section-title {
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.log-box {
+  min-height: 140px;
+  max-height: 220px;
+  overflow: auto;
+  padding: 10px;
+  border-radius: 8px;
+  background: #111a18;
+  color: #d8f4e6;
+  font-family: Consolas, "SFMono-Regular", monospace;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.step-card {
+  margin-top: 12px;
+  padding: 14px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+}
+
+.step-index {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--blue);
+  color: white;
+  font-weight: 850;
+}
+
+.step-card p,
+.settings-card p {
+  margin: 7px 0 12px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.field-label {
+  display: block;
+  margin: 8px 0 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.inline-form {
+  gap: 8px;
+}
+
+input[type="number"],
+input[type="url"] {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+}
+
+.diagnostic-card dl {
+  margin: 10px 0;
+  display: grid;
+  gap: 8px;
+}
+
+.diagnostic-card dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.diagnostic-card dt {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.diagnostic-card dd {
+  margin: 0;
+  font-weight: 800;
+  text-align: right;
+}
+
+.record-list {
+  display: grid;
+  gap: 10px;
+}
+
+.record-card {
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--red);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.record-card.recovered {
+  border-left-color: var(--green);
+}
+
+.record-card strong,
+.record-card span {
+  display: block;
+}
+
+.record-card span {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin: 10px 0 12px;
+}
+
+.segmented button {
+  min-height: 38px;
+  border-radius: 8px;
+  background: #eef4f1;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.segmented button.active {
+  background: var(--green);
+  color: white;
+}
+
+.switch-row {
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.switch-row input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--green);
+}
+
+.alarm-sheet {
+  position: fixed;
+  inset: 0;
+  display: none;
+  place-items: end center;
+  padding: 18px;
+  background: rgba(22, 33, 31, 0.42);
+  z-index: 10;
+}
+
+.alarm-sheet.active {
+  display: grid;
+}
+
+.alarm-card {
+  width: min(100%, 480px);
+  padding: 18px;
+  border-radius: 8px;
+  background: white;
+  box-shadow: var(--shadow);
+}
+
+.alarm-badge {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: var(--red-soft);
+  color: var(--red);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.alarm-card p {
+  margin: 8px 0 14px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.alarm-actions {
+  gap: 10px;
+}
+
+.alarm-actions button {
+  flex: 1;
+}
+
+@media (max-width: 380px) {
+  .app-shell {
+    padding-inline: 12px;
+  }
+
+  .status-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .weight-dial {
+    width: 100%;
+    height: 96px;
+    border-radius: 8px;
+  }
+
+  .action-grid,
+  .metric-grid {
+    grid-template-columns: 1fr;
+  }
+}
