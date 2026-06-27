@@ -77,6 +77,23 @@
 #define USE_CAMERA_TRIGGER          1
 #define CAMERA_TRIGGER_PIN          GET_PIN(A, 4)
 
+/* ===================== 电磁锁配置 ===================== */
+
+/*
+ * 当前电磁锁模块建议接线：
+ *
+ * 模块 VCC -> 外部 5V 电源正极
+ * 模块 GND -> 外部 5V 电源负极，同时与星火1号 GND 共地
+ * 模块 IN/SIG -> 星火1号 PB0
+ *
+ * 这类 5V 钛丝电控锁通常是“默认锁住，短时通电开锁”。
+ * 因此程序只在解锁时输出一个短脉冲，避免长时间给钛丝锁供电。
+ */
+#define USE_ELECTRO_LOCK            1
+#define ELECTRO_LOCK_PIN            GET_PIN(B, 0)
+#define ELECTRO_LOCK_ACTIVE_LEVEL   PIN_HIGH
+#define ELECTRO_LOCK_PULSE_MS       600
+
 /* ===================== 防盗参数配置 ===================== */
 
 /*
@@ -150,6 +167,7 @@ static int32_t g_drop_threshold_g = DEFAULT_DROP_THRESHOLD_G;
 static guard_state_t g_state = GUARD_STATE_IDLE;
 static int g_alarm_on = 0;
 static int32_t g_latest_weight_g_x100 = 0;
+static int g_lock_closed = 1;
 /*
  * 进入疑似报警时的重量。
  */
@@ -471,6 +489,45 @@ static void alarm_set(int on)
     }
 }
 
+/* ===================== 电磁锁控制 ===================== */
+
+static int electro_lock_inactive_level(void)
+{
+    return (ELECTRO_LOCK_ACTIVE_LEVEL == PIN_HIGH) ? PIN_LOW : PIN_HIGH;
+}
+
+static void electro_lock_init(void)
+{
+#if USE_ELECTRO_LOCK
+    rt_pin_mode(ELECTRO_LOCK_PIN, PIN_MODE_OUTPUT);
+    rt_pin_write(ELECTRO_LOCK_PIN, electro_lock_inactive_level());
+#endif
+
+    g_lock_closed = 1;
+}
+
+static void electro_lock_lock(void)
+{
+#if USE_ELECTRO_LOCK
+    rt_pin_write(ELECTRO_LOCK_PIN, electro_lock_inactive_level());
+#endif
+
+    g_lock_closed = 1;
+    rt_kprintf("[LOCK] CLOSED\n");
+}
+
+static void electro_lock_unlock_pulse(void)
+{
+#if USE_ELECTRO_LOCK
+    rt_pin_write(ELECTRO_LOCK_PIN, ELECTRO_LOCK_ACTIVE_LEVEL);
+    rt_thread_mdelay(ELECTRO_LOCK_PULSE_MS);
+    rt_pin_write(ELECTRO_LOCK_PIN, electro_lock_inactive_level());
+#endif
+
+    g_lock_closed = 0;
+    rt_kprintf("[LOCK] UNLOCK pulse %d ms\n", ELECTRO_LOCK_PULSE_MS);
+}
+
 /* ===================== 状态打印 ===================== */
 
 static void print_guard_status(void)
@@ -525,6 +582,7 @@ static void print_guard_status(void)
     rt_kprintf("drop threshold      : %d g\n", g_drop_threshold_g);
     rt_kprintf("min valid weight    : %d g\n", MIN_VALID_WEIGHT_G);
     rt_kprintf("alarm               : %s\n", g_alarm_on ? "ON" : "OFF");
+    rt_kprintf("electro lock        : %s\n", g_lock_closed ? "CLOSED" : "UNLOCKED");
     rt_kprintf("=============================================\n");
 }
 
@@ -1032,6 +1090,7 @@ int guard_start(int argc, char **argv)
     g_return_ok_count = 0;
     g_state = GUARD_STATE_MONITORING;
     alarm_set(0);
+    electro_lock_lock();
 
     rt_kprintf("Guard started.\n");
     rt_kprintf("Original food weight = ");
@@ -1056,6 +1115,7 @@ int guard_stop(int argc, char **argv)
     g_alarm_weight_g_x100 = 0;
     g_return_ok_count = 0;
     alarm_set(0);
+    electro_lock_unlock_pulse();
 
     rt_kprintf("Guard stopped. State is now IDLE.\n");
 
@@ -1165,6 +1225,7 @@ int alarm_off(int argc, char **argv)
     g_alarm_weight_g_x100 = 0;
     g_return_ok_count = 0;
     alarm_set(0);
+    electro_lock_unlock_pulse();
 
     rt_kprintf("Alarm cleared. State is now IDLE.\n");
 
@@ -1190,6 +1251,7 @@ static void app_yes(int argc, char **argv)
     g_original_weight_g_x100 = 0;
     g_alarm_weight_g_x100 = 0;
     g_return_ok_count = 0;
+    electro_lock_unlock_pulse();
 
     rt_kprintf("[APP] User confirmed self pickup. No alarm.\n");
     rt_kprintf("{\"type\":\"EVENT\",\"event\":\"SELF_CONFIRMED\"}\n");
@@ -1220,6 +1282,7 @@ static void app_clear(int argc, char **argv)
     g_original_weight_g_x100 = 0;
     g_alarm_weight_g_x100 = 0;
     g_return_ok_count = 0;
+    electro_lock_unlock_pulse();
 
     rt_kprintf("[APP] Alarm cleared by app.\n");
     rt_kprintf("{\"type\":\"EVENT\",\"event\":\"CLEAR\"}\n");
@@ -1270,6 +1333,32 @@ static void camera_stop(int argc, char **argv)
 }
 MSH_CMD_EXPORT(camera_stop, stop ESP32 camera recording);
 
+
+static int lock_on(int argc, char **argv)
+{
+    electro_lock_lock();
+    return 0;
+}
+MSH_CMD_EXPORT(lock_on, close electro lock);
+
+static int lock_off(int argc, char **argv)
+{
+    electro_lock_unlock_pulse();
+    return 0;
+}
+MSH_CMD_EXPORT(lock_off, unlock electro lock with short pulse);
+
+static int lock_test(int argc, char **argv)
+{
+    rt_kprintf("[LOCK] test start\n");
+    electro_lock_unlock_pulse();
+    rt_thread_mdelay(1000);
+    electro_lock_lock();
+    rt_kprintf("[LOCK] test done\n");
+
+    return 0;
+}
+MSH_CMD_EXPORT(lock_test, test electro lock unlock pulse);
 
 
 /*
@@ -1349,6 +1438,7 @@ MSH_CMD_EXPORT(buzzer_test, test buzzer for 1 second);
 int main(void)
 {
     hx711_init();
+    electro_lock_init();
 
 #if USE_BUZZER
     rt_pin_mode(BUZZER_PIN, PIN_MODE_OUTPUT);
@@ -1371,6 +1461,9 @@ int main(void)
     rt_kprintf("  HX711 GND  -> GND\n");
     rt_kprintf("  HX711 DOUT -> PA1\n");
     rt_kprintf("  HX711 SCK  -> PA0\n");
+    rt_kprintf("  LOCK VCC   -> external 5V\n");
+    rt_kprintf("  LOCK GND   -> external GND and board GND\n");
+    rt_kprintf("  LOCK IN    -> PB0\n");
     rt_kprintf("---------------------------------------------\n");
     rt_kprintf("Commands:\n");
     rt_kprintf("  hx711_raw\n");
@@ -1381,6 +1474,9 @@ int main(void)
     rt_kprintf("  guard_status\n");
     rt_kprintf("  guard_stop\n");
     rt_kprintf("  alarm_off\n");
+    rt_kprintf("  lock_on\n");
+    rt_kprintf("  lock_off\n");
+    rt_kprintf("  lock_test\n");
     rt_kprintf("  set_drop 300\n");
     rt_kprintf("=============================================\n");
 
